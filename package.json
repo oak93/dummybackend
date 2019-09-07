@@ -1,0 +1,21 @@
+{
+  "name": "dummybackend",
+  "version": "1.0.6",
+  "description": "a dummy backend for developers",
+  "main": "index.js",
+  "scripts": {
+    "babel": "babel ./main.js --out-file ./index.js"
+  },
+  "keywords": [
+    "npm",
+    "dummy",
+    "backend"
+  ],
+  "author": "osman akar",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.6.0",
+    "@babel/core": "^7.6.0",
+    "@babel/preset-env": "^7.6.0"
+  }
+}
