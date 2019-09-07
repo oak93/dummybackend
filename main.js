@@ -6,6 +6,7 @@ const DummyBackend = (function () {
         else instance = this;
 
         this.initialFetch = global.fetch;
+        this.initialXHRSend = global.XMLHttpRequest.prototype.send;
 
         this.subscribeToFetch = function () {
             const pst = _choosePersister(persister);
@@ -29,6 +30,35 @@ const DummyBackend = (function () {
 
         this.unSubscribeFromFetch = function () {
             global.fetch = this.initialFetch;
+        }
+
+        this.subscribeToXHR = function () {
+            const send = global.XMLHttpRequest.prototype.send;
+
+            function sendReplacement() {
+                if (this.onreadystatechange) {
+                    this._onreadystatechange = this.onreadystatechange;
+                }
+
+                this.onreadystatechange = onReadyStateChangeReplacement;
+                return send.apply(this, arguments);
+            };
+
+            function onReadyStateChangeReplacement() {
+                if (this._onreadystatechange) {
+                    if (this.readyState == 4 && this.status == 200) {
+                        console.log('Hey, you called XHR!', this.responseText);
+                    }
+
+                    return this._onreadystatechange.apply(this, arguments);
+                }
+            }
+
+            global.XMLHttpRequest.prototype.send = sendReplacement;
+        }
+
+        this.unSubscribeFromXHR = function () {
+            global.XMLHttpRequest = this.initialXHR;
         }
     }
 
