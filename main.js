@@ -7,10 +7,9 @@ const DummyBackend = (function () {
 
         this.initialFetch = global.fetch;
         this.initialXHRSend = global.XMLHttpRequest.prototype.send;
+        const pst = _choosePersister(persister);
 
         this.subscribeToFetch = function () {
-            const pst = _choosePersister(persister);
-
             global.fetch = (function (_fetch) {
                 return function () {
                     console.log("Hey, you called fetch!");
@@ -40,17 +39,41 @@ const DummyBackend = (function () {
                     this._onreadystatechange = this.onreadystatechange;
                 }
 
+                if (!this.onreadystatechange) {
+                    if (this.onload) {
+                        this._onload = this.onload;
+                    } else {
+                        this._onload = function () { };
+                    }
+
+                    this.onload = onLoadStateChangeReplacement;
+                }
+
                 this.onreadystatechange = onReadyStateChangeReplacement;
+
                 return send.apply(this, arguments);
             };
 
             function onReadyStateChangeReplacement() {
                 if (this._onreadystatechange) {
-                    if (this.readyState == 4 && this.status == 200) {
-                        console.log('Hey, you called XHR!', this.responseText);
-                    }
+                    _XHRResultCatcher(this);
 
                     return this._onreadystatechange.apply(this, arguments);
+                }
+            }
+
+            function onLoadStateChangeReplacement() {
+                if (this._onload) {
+                    _XHRResultCatcher(this);
+
+                    return this._onload.apply(this, arguments);
+                }
+            }
+
+            function _XHRResultCatcher(context) {
+                if (context.readyState == 4 && context.status == 200 && !context.responseText.includes('entropy')) {
+                    console.log('Hey, you called XHR!', context.responseText);
+                    pst(context.responseURL, JSON.parse(context.responseText));
                 }
             }
 
