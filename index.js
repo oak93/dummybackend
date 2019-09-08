@@ -89,7 +89,7 @@ const DummyBackend = function () {
     };
 
     this.unSubscribeFromXHR = function () {
-      global.XMLHttpRequest = this.initialXHR;
+      global.XMLHttpRequest.prototype.send = this.initialXHRSend;
     };
   }
 
